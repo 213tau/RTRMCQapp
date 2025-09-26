@@ -1,143 +1,409 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Quiz App</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Tauseef Science - Quiz</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0;font-family:sans-serif}
-  body{background:#007bff;color:#fff;display:flex;flex-direction:column;align-items:center;padding:20px}
-  h1{font-size:clamp(22px,6vw,36px);margin-bottom:20px}
-
-  button{cursor:pointer;border:none;border-radius:6px;padding:10px 18px;font-size:clamp(14px,4vw,18px)}
-  .primary{background:#fff;color:#007bff}
-  .secondary{background:#007bff;color:#fff;border:1px solid #fff}
-
-  .box{
-    position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
-    background:#fff;color:#111;width:min(95vw,500px);border-radius:8px;
-    padding:16px;box-shadow:0 4px 16px rgba(0,0,0,.3);
-    display:none;flex-direction:column;gap:14px
+  :root{
+    --accent: #007bff;
+    --max-modal: 640px;
+    --gap: 14px;
   }
-  .box.show{display:flex}
 
-  .options{display:flex;flex-direction:column;gap:10px}
-  .option{background:#f0f8ff;padding:10px;border:1px solid #84c5fe;border-radius:6px}
-  .option.correct{background:#d4edda;border-color:#c3e6cb}
-  .option.incorrect{background:#f8d7da;border-color:#f5c6cb}
-  .option.disabled{pointer-events:none;opacity:.8}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--accent);
+    font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    padding:24px;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    gap:18px;
+    color:#fff;
+  }
 
-  .footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
-  .next{background:#007bff;color:#fff;display:none}
+  /* Header */
+  .Academy{
+    width:100%;
+    max-width:var(--max-modal);
+    text-align:center;
+    font-family: Georgia, serif;
+    font-size: clamp(20px, 6vw, 48px);
+    line-height:1;
+    color:#fff;
+    margin-bottom:6px;
+  }
 
-  .timerbar{height:6px;background:#ddd;border-radius:3px;overflow:hidden}
-  .timerline{height:100%;background:#007bff;width:0%}
+  /* Start button */
+  .start_btn{width:100%;max-width:var(--max-modal);display:flex;justify-content:center}
+  .start_btn button{
+    background:#fff;color:var(--accent);border-radius:8px;padding:12px 22px;font-size:clamp(16px,3vw,22px);
+    border:none;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.2)
+  }
+
+  /* Reusable modal styles */
+  .modal{
+    position:fixed;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    width: min(94vw, var(--max-modal));
+    background:#fff;
+    color:#111;
+    border-radius:8px;
+    box-shadow:0 10px 30px rgba(0,0,0,.25);
+    max-height:90vh;
+    overflow:auto;
+    display:flex;
+    flex-direction:column;
+    transition:transform .18s ease,opacity .18s ease;
+    padding:0;
+  }
+  .hidden{opacity:0;pointer-events:none;transform: translate(-50%,-50%) scale(.98)}
+  .visible{opacity:1;pointer-events:auto;transform: translate(-50%,-50%) scale(1)}
+
+  /* Info box */
+  .info_box .info-title{
+    padding:16px 20px;border-bottom:1px solid #eee;font-weight:600;font-size:16px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .info_box .info-list{padding:14px 18px;line-height:1.45;font-size:15px;color:#222}
+  .info_box .buttons{display:flex;gap:10px;padding:12px 18px;border-top:1px solid #eee;justify-content:flex-end}
+  .info_box .buttons button{padding:8px 14px;border-radius:6px;border:1px solid var(--accent);cursor:pointer;background:#fff;color:var(--accent)}
+
+  /* Quiz box */
+  .quiz_box header{
+    display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #eee;
+  }
+  .quiz_box .title{font-weight:600;font-size:16px}
+  .timer{display:flex;align-items:center;gap:10px;font-size:14px;background:#e9f3ff;padding:6px 10px;border-radius:6px}
+  .timer_sec{min-width:40px;text-align:center;background:#343a40;color:#fff;padding:6px;border-radius:6px;font-weight:600}
+  .time_line_wrap{position:relative;flex:1;margin-left:12px;height:6px;background:#e6f0ff;border-radius:6px;overflow:hidden}
+  .time_line{height:100%;width:0%;background:var(--accent);transition:width .08s linear}
+
+  section{padding:16px}
+  .que_text{font-size:clamp(16px,4.2vw,24px);font-weight:600;margin-bottom:12px}
+  .option_list{display:flex;flex-direction:column;gap:10px}
+  .option{
+    display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-radius:8px;background:aliceblue;border:1px solid #84c5fe;cursor:pointer;
+    font-size:clamp(14px,3vw,16px);
+  }
+  .option:hover{background:#cfe9ff}
+  .option.disabled{pointer-events:none;opacity:.92}
+  .option.correct{background:#d4edda;border-color:#c3e6cb;color:#155724}
+  .option.incorrect{background:#f8d7da;border-color:#f5c6cb;color:#721c24}
+  .option .icon{min-width:28px;text-align:center;font-weight:700}
+
+  footer{
+    display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid #eee;
+    gap:12px;
+  }
+  .total_que{font-size:15px}
+  .next_btn{background:var(--accent);color:#fff;padding:9px 14px;border-radius:8px;border:none;cursor:pointer;opacity:0;transform:scale(.98);transition:opacity .15s,transform .15s}
+  .next_btn.show{opacity:1;transform:scale(1)}
+
+  /* Result */
+  .result_box{padding:22px;text-align:center}
+  .result_box .icon{font-size:56px;color:var(--accent);margin-bottom:8px}
+  .result_box .complete_text{font-size:18px;margin-bottom:6px}
+  .result_box .score_text{font-size:15px;margin-top:8px}
+  .result_box .buttons{display:flex;gap:10px;justify-content:center;margin-top:14px}
+  .result_box .buttons button{padding:10px 14px;border-radius:8px;border:1px solid var(--accent);cursor:pointer}
+  .result_box .buttons .restart{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+  /* small spacing on very small screens */
+  @media (max-height:470px){
+    .modal{max-height:96vh;padding:8px}
+    .Academy{font-size:20px}
+  }
 </style>
 </head>
 <body>
 
-<h1>Simple Quiz</h1>
-<button id="startBtn" class="primary">Start Quiz</button>
+  <div class="Academy">TAUSEEF SCIENCE APP</div>
 
-<!-- Info -->
-<div id="infoBox" class="box">
-  <strong>Rules:</strong>
-  <div>1. 15 seconds per question.</div>
-  <div>2. Once you pick, it’s final.</div>
-  <div>3. No exit during quiz.</div>
-  <div>4. Points only for correct answers.</div>
-  <div style="display:flex;justify-content:flex-end;gap:10px">
-    <button id="exitBtn" class="secondary">Exit</button>
-    <button id="continueBtn" class="primary">Continue</button>
+  <div class="start_btn">
+    <button id="startBtn">Start Quiz</button>
   </div>
-</div>
 
-<!-- Quiz -->
-<div id="quizBox" class="box">
-  <div style="display:flex;justify-content:space-between;align-items:center">
-    <div id="timerTxt">Time: <span id="timeCount">15</span></div>
-    <div class="timerbar"><div id="timeLine" class="timerline"></div></div>
+  <!-- Info Box -->
+  <div id="infoBox" class="modal hidden info_box" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
+    <div class="info-title" id="infoTitle"><strong>Some Rules of this Quiz</strong></div>
+    <div class="info-list">
+      <div>1. You will have only <strong>15 seconds</strong> per each question.</div>
+      <div>2. Once you select your answer, it can't be undone.</div>
+      <div>3. You can't select any option once time goes off.</div>
+      <div>4. You can't exit from the Quiz while you're playing.</div>
+      <div>5. You'll get points on the basis of your correct answers.</div>
+    </div>
+    <div class="buttons">
+      <button id="exitInfo">Exit Quiz</button>
+      <button id="continueInfo">Continue</button>
+    </div>
   </div>
-  <div id="questionText"></div>
-  <div id="options" class="options"></div>
-  <div class="footer">
-    <div id="qCounter"></div>
-    <button id="nextBtn" class="next">Next</button>
-  </div>
-</div>
 
-<!-- Result -->
-<div id="resultBox" class="box">
-  <div id="scoreText"></div>
-  <div style="display:flex;justify-content:center;gap:10px">
-    <button id="replayBtn" class="primary">Replay</button>
-    <button id="quitBtn" class="secondary">Quit</button>
+  <!-- Quiz Box -->
+  <div id="quizBox" class="modal hidden quiz_box" role="dialog" aria-modal="true">
+    <header>
+      <div class="title">Awesome Quiz Application</div>
+      <div style="display:flex;align-items:center;gap:10px;width:52%">
+        <div class="timer" aria-hidden="true">
+          <div class="time_left_txt">Time Left</div>
+          <div class="timer_sec" id="timeCount">15</div>
+        </div>
+        <div class="time_line_wrap" aria-hidden="true">
+          <div id="timeLine" class="time_line"></div>
+        </div>
+      </div>
+    </header>
+
+    <section>
+      <div class="que_text" id="queText"></div>
+      <div class="option_list" id="optionList"></div>
+    </section>
+
+    <footer>
+      <div class="total_que" id="bottomCounter"></div>
+      <button id="nextBtn" class="next_btn">Next Que</button>
+    </footer>
   </div>
-</div>
+
+  <!-- Result Box -->
+  <div id="resultBox" class="modal hidden result_box" role="dialog" aria-modal="true">
+    <div class="icon"><i class="fas fa-crown"></i></div>
+    <div class="complete_text">You've completed the Quiz!</div>
+    <div class="score_text" id="scoreText"></div>
+    <div class="buttons">
+      <button id="restartBtn" class="restart">Replay Quiz</button>
+      <button id="quitBtn">Quit Quiz</button>
+    </div>
+  </div>
 
 <script>
-const questions=[
- {q:"What does HTML stand for?",a:"Hyper Text Markup Language",o:["Hyper Text Preprocessor","Hyper Text Markup Language","Hyper Text Multiple Language","Hyper Tool Multi Language"]},
- {q:"What does CSS stand for?",a:"Cascading Style Sheet",o:["Common Style Sheet","Colorful Style Sheet","Computer Style Sheet","Cascading Style Sheet"]},
- {q:"What does JS stand for?",a:"JavaScript",o:["JavaSuper","JavaScript","JustScript","JollySuper"]},
+/* =====================
+   QUESTIONS SOURCE
+   keep your original questions here
+   ===================== */
+const questions = [
+  {numb:1, question:"What does HTML stand for?", answer:"Hyper Text Markup Language", options:["Hyper Text Preprocessor","Hyper Text Markup Language","Hyper Text Multiple Language","Hyper Tool Multi Language"]},
+  {numb:2, question:"What does CSS stand for?", answer:"Cascading Style Sheet", options:["Common Style Sheet","Colorful Style Sheet","Computer Style Sheet","Cascading Style Sheet"]},
+  {numb:3, question:"What does PHP stand for?", answer:"Hypertext Preprocessor", options:["Hypertext Preprocessor","Hypertext Programming","Hypertext Preprogramming","Hometext Preprocessor"]},
+  {numb:4, question:"What does SQL stand for?", answer:"Structured Query Language", options:["Stylish Question Language","Stylesheet Query Language","Statement Question Language","Structured Query Language"]},
+  {numb:5, question:"What does XML stand for?", answer:"eXtensible Markup Language", options:["eXtensible Markup Language","eXecutable Multiple Language","eXTra Multi-Program Language","eXamine Multiple Language"]},
+  {numb:6, question:"جانوروں کے جسم میں سرانجام دیئے جانے والے افعال کے بارے میں علم کہلاتا ہے۔", answer:"علمِ حیاتیات", options:["علمِ کیمیا","علمِ حیاتیات","علمِ فلکیات","علمِ ارضیات"]},
+  {numb:7, question:"Muscle fatigue is caused by:", answer:"Lactic acid", options:["Lactic acid","Fumaric acid","CO2","Ethyl alcohol"]},
+  {numb:8, question:"The active conducting portion of wood in older trees is:", answer:"Sap wood", options:["Bark","Heart wood","Sap wood","Callus"]},
+  {numb:9, question:"Resting membrane potential of a neuron is:", answer:"- 70 mV", options:["+ 50 mV","- 60 mV","+ 80 mV","- 70 mV"]},
 ];
 
-let qIndex=0,score=0,timer,timerLine,sec=15;
+/* =====================
+   ELEMENTS
+   ===================== */
+const startBtn = document.getElementById('startBtn');
+const infoBox = document.getElementById('infoBox');
+const exitInfo = document.getElementById('exitInfo');
+const continueInfo = document.getElementById('continueInfo');
+const quizBox = document.getElementById('quizBox');
+const resultBox = document.getElementById('resultBox');
 
-const startBtn=document.getElementById("startBtn"),
-      infoBox=document.getElementById("infoBox"),
-      exitBtn=document.getElementById("exitBtn"),
-      continueBtn=document.getElementById("continueBtn"),
-      quizBox=document.getElementById("quizBox"),
-      questionText=document.getElementById("questionText"),
-      options=document.getElementById("options"),
-      timeCount=document.getElementById("timeCount"),
-      timeLine=document.getElementById("timeLine"),
-      qCounter=document.getElementById("qCounter"),
-      nextBtn=document.getElementById("nextBtn"),
-      resultBox=document.getElementById("resultBox"),
-      scoreText=document.getElementById("scoreText"),
-      replayBtn=document.getElementById("replayBtn"),
-      quitBtn=document.getElementById("quitBtn");
+const queText = document.getElementById('queText');
+const optionList = document.getElementById('optionList');
+const bottomCounter = document.getElementById('bottomCounter');
 
-startBtn.onclick=()=>infoBox.classList.add("show");
-exitBtn.onclick=()=>location.reload();
-continueBtn.onclick=()=>{infoBox.classList.remove("show");quizBox.classList.add("show");startQuiz();};
-replayBtn.onclick=()=>{resultBox.classList.remove("show");startQuiz();};
-quitBtn.onclick=()=>location.reload();
+const timeCount = document.getElementById('timeCount');
+const timeLine = document.getElementById('timeLine');
 
-function startQuiz(){qIndex=0;score=0;showQ();}
-function showQ(){
-  clearInterval(timer);cancelAnimationFrame(timerLine);
-  sec=15;timeCount.textContent=sec;timeLine.style.width="0%";
-  questionText.textContent=questions[qIndex].q;
-  options.innerHTML="";questions[qIndex].o.forEach(opt=>{
-    let div=document.createElement("div");div.textContent=opt;div.className="option";
-    div.onclick=()=>selectOpt(div,opt);options.append(div);
-  });
-  qCounter.textContent=`${qIndex+1}/${questions.length}`;
-  nextBtn.style.display="none";
-  startTimer();startLine();
+const nextBtn = document.getElementById('nextBtn');
+const scoreText = document.getElementById('scoreText');
+const restartBtn = document.getElementById('restartBtn');
+const quitBtn = document.getElementById('quitBtn');
+
+let timeValue = 15;
+let que_index = 0;
+let userScore = 0;
+
+let timerInterval = null;
+let rafId = null;
+let timerStartAt = 0;
+let timerTotal = 15;
+
+/* =====================
+   UI helper functions
+   ===================== */
+function show(el){ el.classList.remove('hidden'); el.classList.add('visible'); }
+function hide(el){ el.classList.remove('visible'); el.classList.add('hidden'); }
+
+/* =====================
+   START / INFO
+   ===================== */
+startBtn.addEventListener('click', () => show(infoBox));
+exitInfo.addEventListener('click', () => location.reload());
+continueInfo.addEventListener('click', () => {
+  hide(infoBox);
+  show(quizBox);
+  startQuiz();
+});
+
+/* =====================
+   QUIZ LOGIC
+   ===================== */
+function startQuiz(){
+  que_index = 0;
+  userScore = 0;
+  renderQuestion(que_index);
+  startTimer(15);
+  startTimerLine(15);
+  hide(resultBox);
+  show(quizBox);
 }
-function selectOpt(el,opt){
-  stopTimers();
-  let correct=questions[qIndex].a;
-  if(opt===correct){el.classList.add("correct");score++;}
-  else{el.classList.add("incorrect");[...options.children].find(o=>o.textContent===correct).classList.add("correct");}
-  [...options.children].forEach(o=>o.classList.add("disabled"));
-  nextBtn.style.display="inline-block";
+
+function renderQuestion(idx){
+  const q = questions[idx];
+  queText.innerText = `${q.numb}. ${q.question}`;
+  optionList.innerHTML = q.options.map(opt => `
+    <div class="option" data-opt="${escapeHtml(opt)}">
+      <span class="label">${opt}</span>
+      <span class="icon" aria-hidden="true"></span>
+    </div>`).join('');
+  // wire option clicks
+  Array.from(optionList.children).forEach(el => el.addEventListener('click', () => optionSelected(el)));
+  bottomCounter.innerText = `${idx+1} of ${questions.length} Questions`;
+  nextBtn.classList.remove('show');
+  timeCount.innerText = String(15).padStart(2,'0');
+  timeLine.style.width = '0%';
 }
-nextBtn.onclick=()=>{if(qIndex<questions.length-1){qIndex++;showQ();}else showResult();};
 
-function startTimer(){timer=setInterval(()=>{sec--;timeCount.textContent=sec;if(sec<0){clearInterval(timer);timeUp();}},1000);}
-function startLine(){let start=performance.now();function anim(now){let pct=(now-start)/(15000)*100;timeLine.style.width=Math.min(pct,100)+"%";if(pct<100)timerLine=requestAnimationFrame(anim);}timerLine=requestAnimationFrame(anim);}
-function stopTimers(){clearInterval(timer);cancelAnimationFrame(timerLine);}
-function timeUp(){selectOpt(document.createElement("div"),"");}
+/* small helper to avoid HTML-injection when setting data attributes */
+function escapeHtml(s){
+  return s.replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 
+/* mark icons and classes */
+function markCorrectOption(el){
+  el.classList.add('correct');
+  el.querySelector('.icon').innerHTML = '<i class="fas fa-check"></i>';
+}
+function markIncorrectOption(el){
+  el.classList.add('incorrect');
+  el.querySelector('.icon').innerHTML = '<i class="fas fa-times"></i>';
+}
+
+/* option selected by user */
+function optionSelected(optionEl){
+  if(optionEl.classList.contains('disabled')) return; // already chosen/time's up
+  clearTimers();
+  const chosen = optionEl.getAttribute('data-opt');
+  const correct = questions[que_index].answer;
+  // compare trimmed strings
+  if(String(chosen).trim() === String(correct).trim()){
+    userScore++;
+    markCorrectOption(optionEl);
+  } else {
+    markIncorrectOption(optionEl);
+    // reveal correct
+    const all = Array.from(optionList.children);
+    const found = all.find(o => String(o.getAttribute('data-opt')).trim() === String(correct).trim());
+    if(found) markCorrectOption(found);
+  }
+  // disable all
+  Array.from(optionList.children).forEach(o => o.classList.add('disabled'));
+  nextBtn.classList.add('show');
+}
+
+/* when time goes off */
+function handleTimeOff(){
+  clearTimers();
+  const correct = questions[que_index].answer;
+  const all = Array.from(optionList.children);
+  const found = all.find(o => String(o.getAttribute('data-opt')).trim() === String(correct).trim());
+  if(found) markCorrectOption(found);
+  all.forEach(o => o.classList.add('disabled'));
+  nextBtn.classList.add('show');
+}
+
+/* NEXT button */
+nextBtn.addEventListener('click', () => {
+  if(que_index < questions.length - 1){
+    que_index++;
+    renderQuestion(que_index);
+    startTimer(15);
+    startTimerLine(15);
+  } else {
+    showResult();
+  }
+});
+
+/* RESULT / RESTART / QUIT */
 function showResult(){
-  quizBox.classList.remove("show");resultBox.classList.add("show");
-  scoreText.textContent=`You got ${score} out of ${questions.length}`;
+  hide(quizBox);
+  show(resultBox);
+  let msg;
+  if(userScore > 3) msg = `and congrats! 🎉 You got ${userScore} out of ${questions.length}`;
+  else if(userScore > 1) msg = `and nice 😎 You got ${userScore} out of ${questions.length}`;
+  else msg = `and sorry 😐 You got only ${userScore} out of ${questions.length}`;
+  scoreText.innerText = msg;
 }
+
+restartBtn.addEventListener('click', () => {
+  hide(resultBox);
+  startQuiz();
+});
+quitBtn.addEventListener('click', () => location.reload());
+
+/* =====================
+   TIMER (countdown seconds)
+   ===================== */
+function startTimer(seconds){
+  clearInterval(timerInterval);
+  timeCount.innerText = String(seconds).padStart(2,'0');
+  let remaining = seconds;
+  timerInterval = setInterval(() => {
+    remaining--;
+    if(remaining >= 0){
+      timeCount.innerText = String(remaining).padStart(2,'0');
+    }
+    if(remaining < 0){
+      clearInterval(timerInterval);
+      handleTimeOff();
+    }
+  }, 1000);
+}
+
+/* animate the progress bar smoothly using requestAnimationFrame */
+function startTimerLine(seconds){
+  cancelAnimationFrame(rafId);
+  timeLine.style.width = '0%';
+  timerTotal = seconds;
+  timerStartAt = performance.now();
+  function frame(now){
+    const elapsed = (now - timerStartAt) / 1000;
+    const pct = Math.min((elapsed / timerTotal) * 100, 100);
+    timeLine.style.width = pct + '%';
+    if(pct < 100){
+      rafId = requestAnimationFrame(frame);
+    } else {
+      // fully filled; nothing else here (the countdown handles timeout)
+      cancelAnimationFrame(rafId);
+    }
+  }
+  rafId = requestAnimationFrame(frame);
+}
+
+function clearTimers(){
+  clearInterval(timerInterval);
+  timerInterval = null;
+  if(rafId) cancelAnimationFrame(rafId);
+  rafId = null;
+}
+
+/* clear timers on page unload to be safe */
+window.addEventListener('beforeunload', () => clearTimers());
+
+/* initial focus for accessibility */
+startBtn.focus();
 </script>
 </body>
 </html>
